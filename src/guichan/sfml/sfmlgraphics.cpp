@@ -122,11 +122,9 @@ namespace gcn
         x += top.xOffset;
         y += top.yOffset;
 
-        sf::VertexArray point(sf::Points, 1);
+        sf::Vertex point(sf::Vector2f(static_cast<float>(x), static_cast<float>(y)), mSfmlColor);
 
-        point[0] = sf::Vertex(sf::Vector2f(static_cast<float>(x), static_cast<float>(y)), mSfmlColor);
-
-        mTarget->draw(point);
+        mTarget->draw(&point, 1, sf::Points);
     }
 
     void SFMLGraphics::drawLine(int x1, int y1, int x2, int y2)
@@ -143,12 +141,13 @@ namespace gcn
         x2 += top.xOffset;
         y2 += top.yOffset;
 
-        sf::VertexArray line(sf::Lines, 2);
+        sf::Vertex line[2] = 
+        {
+            sf::Vertex(sf::Vector2f(static_cast<float>(x1), static_cast<float>(y1)), mSfmlColor),
+            sf::Vertex(sf::Vector2f(static_cast<float>(x2), static_cast<float>(y2)), mSfmlColor)
+        };
 
-        line[0] = sf::Vertex(sf::Vector2f(static_cast<float>(x1), static_cast<float>(y1)), mSfmlColor);
-        line[1] = sf::Vertex(sf::Vector2f(static_cast<float>(x2), static_cast<float>(y2)), mSfmlColor);
-
-        mTarget->draw(line);
+        mTarget->draw(line, 2, sf::Lines);
     }
 
     void SFMLGraphics::drawRectangle(const Rectangle& rectangle)
@@ -159,18 +158,22 @@ namespace gcn
         }
 
         const ClipRectangle& top = mClipStack.top();
-        const float outlineThickness = 1.0f;
 
-        sf::Vector2f size(static_cast<float>(rectangle.width) - outlineThickness, static_cast<float>(rectangle.height) - outlineThickness);
-        sf::Vector2f position(static_cast<float>(top.xOffset + rectangle.x), static_cast<float>(top.yOffset + rectangle.y));
-        
-        sf::RectangleShape rectShape(size);
-        rectShape.setPosition(position);
-        rectShape.setOutlineColor(mSfmlColor);
-        rectShape.setOutlineThickness(outlineThickness);
-        rectShape.setFillColor(sf::Color::Transparent);
+        const float x = static_cast<float>(rectangle.x + top.xOffset);
+        const float y = static_cast<float>(rectangle.y + top.yOffset);
+        const float w = static_cast<float>(rectangle.width);
+        const float h = static_cast<float>(rectangle.height);
 
-        mTarget->draw(rectShape);
+        sf::Vertex rect[5] = 
+        {
+            sf::Vertex(sf::Vector2f(x, y), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x + w, y), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x + w, y + h), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x, y + h), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x, y), mSfmlColor)
+        };
+
+        mTarget->draw(rect, 5, sf::Lines);
     }
 
     void SFMLGraphics::fillRectangle(const Rectangle& rectangle)
@@ -182,14 +185,20 @@ namespace gcn
 
         const ClipRectangle& top = mClipStack.top();
 
-        sf::Vector2f size(static_cast<float>(rectangle.width), static_cast<float>(rectangle.height));
-        sf::Vector2f position(static_cast<float>(top.xOffset + rectangle.x), static_cast<float>(top.yOffset + rectangle.y));
-        
-        sf::RectangleShape rectShape(size);
-        rectShape.setPosition(position);
-        rectShape.setFillColor(mSfmlColor);
+        const float x = static_cast<float>(rectangle.x + top.xOffset);
+        const float y = static_cast<float>(rectangle.y + top.yOffset);
+        const float w = static_cast<float>(rectangle.width);
+        const float h = static_cast<float>(rectangle.height);
 
-        mTarget->draw(rectShape);
+        sf::Vertex rect[4] = 
+        {
+            sf::Vertex(sf::Vector2f(x, y), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x + w, y), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x + w, y + h), mSfmlColor),
+            sf::Vertex(sf::Vector2f(x, y + h), mSfmlColor)
+        };
+
+        mTarget->draw(rect, 4, sf::Quads);
     }
 
     void SFMLGraphics::setColor(const Color& color)
