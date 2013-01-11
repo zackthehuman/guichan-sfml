@@ -36,7 +36,7 @@ namespace gcn
         mSize = mTarget->getView().getSize();
 
         glEnable(GL_SCISSOR_TEST);
-        pushClipArea(Rectangle(0, 0, mSize.x, mSize.y));
+        pushClipArea(Rectangle(0, 0, static_cast<int>(mSize.x), static_cast<int>(mSize.y)));
     }
 
     void SFMLGraphics::_endDraw()
@@ -55,28 +55,7 @@ namespace gcn
     {
         bool result = Graphics::pushClipArea(area);
 
-        // Determine "world" coordinates
-        const int worldLeft = mClipStack.top().x;
-        const int worldTop = mSize.y - mClipStack.top().y - mClipStack.top().height;
-        const int worldRight = worldLeft + mClipStack.top().width;
-        const int worldBottom = worldTop + mClipStack.top().height;
-
-        // Scale the coordinate according to the view ratio
-        const sf::Vector2f worldPosition = sf::Vector2f(static_cast<float>(worldLeft), static_cast<float>(worldTop));
-        const sf::Vector2f worldSize = sf::Vector2f(static_cast<float>(worldRight), static_cast<float>(worldBottom));
-        const sf::Vector2i targetPosition = mTarget->mapCoordsToPixel(worldPosition);
-        const sf::Vector2i targetSize = mTarget->mapCoordsToPixel(worldSize);
-
-        // Determine "target" coordinates
-        const int renderedX = targetPosition.x;
-        const int renderedY = targetPosition.y;
-        const int renderedWidth = targetSize.x - targetPosition.x;
-        const int renderedHeight = targetSize.y - targetPosition.y;
-
-        glScissor(renderedX,
-                  renderedY,
-                  renderedWidth,
-                  renderedHeight);
+        calculateScissoring();
 
         return result;
     }
@@ -90,28 +69,7 @@ namespace gcn
             return;
         }
 
-        // Determine "world" coordinates
-        const int worldLeft = mClipStack.top().x;
-        const int worldTop = mSize.y - mClipStack.top().y - mClipStack.top().height;
-        const int worldRight = worldLeft + mClipStack.top().width;
-        const int worldBottom = worldTop + mClipStack.top().height;
-
-        // Scale the coordinate according to the view ratio
-        const sf::Vector2f worldPosition = sf::Vector2f(static_cast<float>(worldLeft), static_cast<float>(worldTop));
-        const sf::Vector2f worldSize = sf::Vector2f(static_cast<float>(worldRight), static_cast<float>(worldBottom));
-        const sf::Vector2i targetPosition = mTarget->mapCoordsToPixel(worldPosition);
-        const sf::Vector2i targetSize = mTarget->mapCoordsToPixel(worldSize);
-
-        // Determine "target" coordinates
-        const int renderedX = targetPosition.x;
-        const int renderedY = targetPosition.y;
-        const int renderedWidth = targetSize.x - targetPosition.x;
-        const int renderedHeight = targetSize.y - targetPosition.y;
-
-        glScissor(renderedX,
-                  renderedY,
-                  renderedWidth,
-                  renderedHeight);
+        calculateScissoring();
     }
 
     sf::RenderTarget& SFMLGraphics::getRenderTarget() const {
@@ -245,5 +203,31 @@ namespace gcn
     const Color& SFMLGraphics::getColor() const
     {
         return mColor;
+    }
+
+    void SFMLGraphics::calculateScissoring()
+    {
+        // Determine "world" coordinates
+        const int worldLeft = mClipStack.top().x;
+        const int worldTop = static_cast<int>(mSize.y) - mClipStack.top().y - mClipStack.top().height;
+        const int worldRight = worldLeft + mClipStack.top().width;
+        const int worldBottom = worldTop + mClipStack.top().height;
+
+        // Scale the coordinate according to the view ratio
+        const sf::Vector2f worldPosition = sf::Vector2f(static_cast<float>(worldLeft), static_cast<float>(worldTop));
+        const sf::Vector2f worldSize = sf::Vector2f(static_cast<float>(worldRight), static_cast<float>(worldBottom));
+        const sf::Vector2i targetPosition = mTarget->mapCoordsToPixel(worldPosition);
+        const sf::Vector2i targetSize = mTarget->mapCoordsToPixel(worldSize);
+
+        // Determine "target" coordinates
+        const int renderedX = targetPosition.x;
+        const int renderedY = targetPosition.y;
+        const int renderedWidth = targetSize.x - targetPosition.x;
+        const int renderedHeight = targetSize.y - targetPosition.y;
+
+        glScissor(renderedX,
+                  renderedY,
+                  renderedWidth,
+                  renderedHeight);
     }
 }

@@ -19,7 +19,7 @@ namespace gcn
     class Rectangle;
 
     /**
-     * SDL implementation of the Graphics.
+     * SFML implementation of the Graphics.
      */
     class GCN_EXTENSION_DECLSPEC SFMLGraphics : public Graphics
     {
@@ -80,6 +80,12 @@ namespace gcn
         virtual const Color& getColor() const;
 
     protected:
+        /**
+         * Calculates the correct coordinates to apply a clipping rectangle, 
+         * relative to the current render target's view.
+         */
+        virtual void calculateScissoring();
+
         sf::RenderTarget* mTarget;
         sf::Vector2f mSize;
         sf::Sprite mSprite;
