@@ -6,6 +6,7 @@
 #include "guichan/platform.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/View.hpp>
 #include <SFML/System/Vector2.hpp>
 
 namespace sf
@@ -81,17 +82,16 @@ namespace gcn
 
     protected:
         /**
-         * Calculates the correct coordinates to apply a clipping rectangle, 
-         * relative to the current render target's view.
+         * Converts a ClipRectangle to an sf::View to be used for clipping by a RenderTarget.
          */
-        virtual void calculateScissoring();
+        sf::View convertClipRectangleToView(const ClipRectangle& rectangle) const;
 
         sf::RenderTarget* mTarget;
+        sf::View mContextView;
         sf::Vector2f mSize;
         sf::Sprite mSprite;
         sf::Color mSfmlColor;
         Color mColor;
-        bool mAlpha;
     };
 }
 

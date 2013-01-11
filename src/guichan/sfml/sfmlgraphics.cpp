@@ -25,37 +25,45 @@ namespace gcn
     SFMLGraphics::SFMLGraphics(sf::RenderTarget& target)
         : mTarget(&target)
     {
-        mAlpha = false;
-        mSize = mTarget->getView().getSize();
+        mContextView = mTarget->getView();
+        mSize = mContextView.getSize();
 
         setColor(Color());
     }
 
     void SFMLGraphics::_beginDraw()
     {
-        mSize = mTarget->getView().getSize();
+        // Save the view before drawing
+        mContextView = mTarget->getView();
+        mSize = mContextView.getSize();
 
-        glEnable(GL_SCISSOR_TEST);
         pushClipArea(Rectangle(0, 0, static_cast<int>(mSize.x), static_cast<int>(mSize.y)));
     }
 
     void SFMLGraphics::_endDraw()
     {
         popClipArea();
-        glDisable(GL_SCISSOR_TEST);
+
+        // Restore the view after drawing
+        mTarget->setView(mContextView);
     }
 
     void SFMLGraphics::setRenderTarget(sf::RenderTarget& target)
     {
         mTarget = &target;
-        mSize = mTarget->getView().getSize();
+        mContextView = mTarget->getView();
+        mSize = mContextView.getSize();
     }
 
     bool SFMLGraphics::pushClipArea(Rectangle area)
     {
         bool result = Graphics::pushClipArea(area);
 
-        calculateScissoring();
+        if (result)
+        {
+            const sf::View clippingView = convertClipRectangleToView(mClipStack.top());
+            mTarget->setView(clippingView);
+        }
 
         return result;
     }
@@ -69,7 +77,8 @@ namespace gcn
             return;
         }
 
-        calculateScissoring();
+        const sf::View clippingView = convertClipRectangleToView(mClipStack.top());
+        mTarget->setView(clippingView);
     }
 
     sf::RenderTarget& SFMLGraphics::getRenderTarget() const {
@@ -205,8 +214,6 @@ namespace gcn
     {
         mColor = color;
         mSfmlColor = sf::Color(mColor.r, mColor.g, mColor.b, mColor.a);
-
-        mAlpha = color.a != 255;
     }
 
     const Color& SFMLGraphics::getColor() const
@@ -214,29 +221,27 @@ namespace gcn
         return mColor;
     }
 
-    void SFMLGraphics::calculateScissoring()
+    sf::View SFMLGraphics::convertClipRectangleToView(const ClipRectangle& rectangle) const
     {
-        // Determine "world" coordinates
-        const int worldLeft = mClipStack.top().x;
-        const int worldTop = static_cast<int>(mSize.y) - mClipStack.top().y - mClipStack.top().height;
-        const int worldRight = worldLeft + mClipStack.top().width;
-        const int worldBottom = worldTop + mClipStack.top().height;
+        const sf::Vector2f& currentViewSize = mContextView.getSize();
 
-        // Scale the coordinate according to the view ratio
-        const sf::Vector2f worldPosition = sf::Vector2f(static_cast<float>(worldLeft), static_cast<float>(worldTop));
-        const sf::Vector2f worldSize = sf::Vector2f(static_cast<float>(worldRight), static_cast<float>(worldBottom));
-        const sf::Vector2i targetPosition = mTarget->mapCoordsToPixel(worldPosition);
-        const sf::Vector2i targetSize = mTarget->mapCoordsToPixel(worldSize);
+        sf::FloatRect clipRectangle;
+        clipRectangle.top = static_cast<float>(rectangle.y);
+        clipRectangle.left = static_cast<float>(rectangle.x);
+        clipRectangle.width = static_cast<float>(rectangle.width);
+        clipRectangle.height = static_cast<float>(rectangle.height);
 
-        // Determine "target" coordinates
-        const int renderedX = targetPosition.x;
-        const int renderedY = targetPosition.y;
-        const int renderedWidth = targetSize.x - targetPosition.x;
-        const int renderedHeight = targetSize.y - targetPosition.y;
+        // Use normalized viewport coordinates to emulate clipping
+        // Special case: if the viewport size is 0, then the width/height is 0
+        sf::FloatRect clipViewport;
+        clipViewport.top = currentViewSize.y == 0 ? 0 : (rectangle.y / currentViewSize.y);
+        clipViewport.left = currentViewSize.x == 0 ? 0 : (rectangle.x / currentViewSize.x);
+        clipViewport.width = currentViewSize.x == 0 ? 0 : (rectangle.width / currentViewSize.x);
+        clipViewport.height = currentViewSize.y == 0 ? 0 : (rectangle.height / currentViewSize.y);
 
-        glScissor(renderedX,
-                  renderedY,
-                  renderedWidth,
-                  renderedHeight);
+        sf::View clippingView(clipRectangle);
+        clippingView.setViewport(clipViewport);
+
+        return clippingView;
     }
 }
