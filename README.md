@@ -1,7 +1,7 @@
 guichan-sfml
 ============
 
-A set of classes which provide an SFML-powered backend for Guichan. 
+A set of classes which provide an SFML-powered backend for [Guichan](http://gitorious.org/guichan). 
 
 ## Supported Features ##
 
