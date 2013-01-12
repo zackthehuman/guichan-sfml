@@ -92,6 +92,12 @@ namespace gcn
         sf::Sprite mSprite;
         sf::Color mSfmlColor;
         Color mColor;
+
+        /**
+         * This offset is used for "exact pixelization".
+         * http://www.opengl.org/archives/resources/faq/technical/transformations.htm#tran0030
+         */
+        static const float PIXEL_ALIGNMENT_OFFSET;
     };
 }
 

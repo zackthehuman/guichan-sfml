@@ -22,6 +22,8 @@
 
 namespace gcn
 {
+    const float SFMLGraphics::PIXEL_ALIGNMENT_OFFSET = 0.375f;
+
     SFMLGraphics::SFMLGraphics(sf::RenderTarget& target)
         : mTarget(&target)
     {
@@ -234,10 +236,10 @@ namespace gcn
         // Use normalized viewport coordinates to emulate clipping
         // Special case: if the viewport size is 0, then the width/height is 0
         sf::FloatRect clipViewport;
-        clipViewport.top = currentViewSize.y == 0 ? 0 : (rectangle.y / currentViewSize.y);
-        clipViewport.left = currentViewSize.x == 0 ? 0 : (rectangle.x / currentViewSize.x);
-        clipViewport.width = currentViewSize.x == 0 ? 0 : (rectangle.width / currentViewSize.x);
-        clipViewport.height = currentViewSize.y == 0 ? 0 : (rectangle.height / currentViewSize.y);
+        clipViewport.top = currentViewSize.y == 0 ? 0 : (rectangle.y / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.left = currentViewSize.x == 0 ? 0 : (rectangle.x / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.width = currentViewSize.x == 0 ? 0 : (rectangle.width / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.height = currentViewSize.y == 0 ? 0 : (rectangle.height / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
 
         sf::View clippingView(clipRectangle);
         clippingView.setViewport(clipViewport);
