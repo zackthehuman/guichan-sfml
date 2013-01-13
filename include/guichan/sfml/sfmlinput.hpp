@@ -9,6 +9,7 @@
 #include "guichan/platform.hpp"
 
 #include <SFML/Window/Event.hpp>
+#include <SFML/System/Clock.hpp>
 
 namespace gcn
 {
@@ -74,6 +75,8 @@ namespace gcn
 
         bool mMouseDown;
         bool mMouseInWindow;
+
+        sf::Clock clock;
     };
 }
 

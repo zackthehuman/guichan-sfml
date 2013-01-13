@@ -52,6 +52,132 @@ namespace gcn
 
     void SFMLInput::pushInput(sf::Event event)
     {
+        KeyInput keyInput;
+        MouseInput mouseInput;
+
+        switch (event.type)
+        {
+            case sf::Event::KeyPressed:
+            {
+                int value = convertSFMLEventToGuichanKeyValue(event);
+
+                if (value == -1)
+                {
+                    value = (int)event.key.code; // This is actually wrong; but what can you do?
+                } 
+               
+                keyInput.setKey(Key(value));
+                keyInput.setType(KeyInput::Pressed);
+                keyInput.setShiftPressed(event.key.shift);
+                keyInput.setControlPressed(event.key.control);
+                keyInput.setAltPressed(event.key.alt);
+                keyInput.setMetaPressed(event.key.system);
+                keyInput.setNumericPad(event.key.code >= sf::Keyboard::Numpad0
+                                       && event.key.code <= sf::Keyboard::Numpad9);
+
+                mKeyInputQueue.push(keyInput);
+                break;
+            }
+
+            case sf::Event::KeyReleased:
+            {
+                int value = convertSFMLEventToGuichanKeyValue(event);
+
+                if (value == -1)
+                {
+                    value = (int)event.key.code; // This is actually wrong; but what can you do?
+                } 
+               
+                keyInput.setKey(Key(value));
+                keyInput.setType(KeyInput::Released);
+                keyInput.setShiftPressed(event.key.shift);
+                keyInput.setControlPressed(event.key.control);
+                keyInput.setAltPressed(event.key.alt);
+                keyInput.setMetaPressed(event.key.system);
+                keyInput.setNumericPad(event.key.code >= sf::Keyboard::Numpad0
+                                       && event.key.code <= sf::Keyboard::Numpad9);
+
+                mKeyInputQueue.push(keyInput);
+                break;
+            }
+
+            case sf::Event::MouseButtonPressed:
+                mMouseDown = true;
+                mouseInput.setX(event.mouseButton.x);
+                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setButton(convertMouseButton(event.mouseButton.button));
+                mouseInput.setType(MouseInput::Pressed);
+                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+
+                mMouseInputQueue.push(mouseInput);
+                break;
+
+            case sf::Event::MouseButtonReleased:
+                mMouseDown = false;
+                mouseInput.setX(event.mouseButton.x);
+                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setButton(convertMouseButton(event.mouseButton.button));
+                mouseInput.setType(MouseInput::Released);
+                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+
+                mMouseInputQueue.push(mouseInput);
+                break;
+
+            case sf::Event::MouseMoved:
+                mouseInput.setX(event.mouseButton.x);
+                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setButton(MouseInput::Empty);
+                mouseInput.setType(MouseInput::Moved);
+                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+
+                mMouseInputQueue.push(mouseInput);
+                break;
+
+            case sf::Event::MouseWheelMoved:
+                mMouseDown = true;
+                mouseInput.setX(event.mouseWheel.x);
+                mouseInput.setY(event.mouseWheel.y);
+                mouseInput.setButton(MouseInput::Empty);
+
+                if (event.mouseWheel.delta > 0)
+                {
+                    mouseInput.setType(MouseInput::WheelMovedUp);
+                }
+                else if (event.mouseWheel.delta < 0)
+                {
+                    mouseInput.setType(MouseInput::WheelMovedDown);
+                }
+
+                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+
+                mMouseInputQueue.push(mouseInput);
+                break;
+
+            case sf::Event::LostFocus:
+                /*
+                 * This occurs when the mouse leaves the window and the Guichan
+                 * application loses its mousefocus.
+                 */
+                mMouseInWindow = false;
+
+                if (!mMouseDown)
+                {
+                    mouseInput.setX(-1);
+                    mouseInput.setY(-1);
+                    mouseInput.setButton(MouseInput::Empty);
+                    mouseInput.setType(MouseInput::Moved);
+
+                    mMouseInputQueue.push(mouseInput);
+                }
+                break;
+
+            case sf::Event::GainedFocus:
+                mMouseInWindow = true;
+                break;
+
+            default:
+                break;
+        }
     }
 
     int SFMLInput::convertMouseButton(sf::Mouse::Button button)
@@ -77,7 +203,8 @@ namespace gcn
     {
         int value = -1;
 
-        switch(event.key.code) {
+        switch(event.key.code)
+        {
             case sf::Keyboard::Unknown:
                 value = -1;
                 break;
@@ -383,6 +510,8 @@ namespace gcn
                 break;
             case sf::Keyboard::Pause:
                 value = Key::Pause;
+                break;
+            default:
                 break;
         }
 
