@@ -1,19 +1,5 @@
 #include "guichan/sfml/sfmlgraphics.hpp"
 
-#if defined (_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
-
-#if defined (__amigaos4__)
-#include <mgl/gl.h>
-#define glVertex3i glVertex3f
-#elif defined(__APPLE__)
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-
 #include "guichan/exception.hpp"
 #include "guichan/image.hpp"
 #include "guichan/sfml/sfmlimage.hpp"
