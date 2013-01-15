@@ -6,6 +6,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <cmath>
+
 namespace gcn
 {
     const float SFMLGraphics::PIXEL_ALIGNMENT_OFFSET = 0.375f;
@@ -138,13 +140,45 @@ namespace gcn
         x2 += top.xOffset;
         y2 += top.yOffset;
 
-        sf::Vertex line[2] = 
-        {
-            sf::Vertex(sf::Vector2f(static_cast<float>(x1), static_cast<float>(y1)), mSfmlColor),
-            sf::Vertex(sf::Vector2f(static_cast<float>(x2), static_cast<float>(y2)), mSfmlColor)
-        };
+        bool isHorizontal = (y2 - y1 == 0);
+        bool isVertical = (x2 - x1 == 0);
 
-        mTarget->draw(line, 2, sf::Lines);
+        const float x1f = static_cast<float>(x1);
+        const float y1f = static_cast<float>(y1);
+        const float x2f = static_cast<float>(x2);
+        const float y2f = static_cast<float>(y2);
+
+        sf::Vertex line[6];
+
+        if (isHorizontal)
+        {
+            line[0] = sf::Vertex(sf::Vector2f(x1, y1 + 1.0f), mSfmlColor);
+            line[1] = sf::Vertex(sf::Vector2f(x1, y1), mSfmlColor);
+            line[2] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2), mSfmlColor);
+            line[3] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2), mSfmlColor);
+            line[4] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2 + 1.0f), mSfmlColor);
+            line[5] = sf::Vertex(sf::Vector2f(x1, y1 + 1.0f), mSfmlColor);
+        }
+        else if (isVertical)
+        {
+            line[0] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+            line[1] = sf::Vertex(sf::Vector2f(x1f + 1.0f, y1f), mSfmlColor);
+            line[2] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f + 1.0f), mSfmlColor);
+            line[3] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f + 1.0f), mSfmlColor);
+            line[4] = sf::Vertex(sf::Vector2f(x2f, y2f + 1.0f), mSfmlColor);
+            line[5] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+        }
+        else
+        {
+            line[0] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+            line[1] = sf::Vertex(sf::Vector2f(x1f + 1.0f, y1f), mSfmlColor);
+            line[2] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f), mSfmlColor);
+            line[3] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f), mSfmlColor);
+            line[4] = sf::Vertex(sf::Vector2f(x2f, y2f), mSfmlColor);
+            line[5] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+        }
+
+        mTarget->draw(line, 6, sf::Triangles);
     }
 
     void SFMLGraphics::drawRectangle(const Rectangle& rectangle)
@@ -161,16 +195,10 @@ namespace gcn
         const float w = static_cast<float>(rectangle.width);
         const float h = static_cast<float>(rectangle.height);
 
-        sf::Vertex rect[5] = 
-        {
-            sf::Vertex(sf::Vector2f(x, y), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x + w, y), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x + w, y + h), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x, y + h), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x, y), mSfmlColor)
-        };
-
-        mTarget->draw(rect, 5, sf::Lines);
+        drawLine(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y); // Top
+        drawLine(rectangle.x + rectangle.width, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height); // Right
+        drawLine(rectangle.x + rectangle.width, rectangle.y + rectangle.height, rectangle.x, rectangle.y + rectangle.height); // Bottom
+        drawLine(rectangle.x, rectangle.y + rectangle.height, rectangle.x, rectangle.y); // Left
     }
 
     void SFMLGraphics::fillRectangle(const Rectangle& rectangle)
