@@ -61,8 +61,6 @@ int main() {
     topContainer->add(guiButton.get(), 100, 100);
     topContainer->add(guiCheckbox.get(), 210, 100);
 
-    bool useScaling = false;
-
     while (window->isOpen()) {
         sf::Event event;
         while (window->pollEvent(event)) {
