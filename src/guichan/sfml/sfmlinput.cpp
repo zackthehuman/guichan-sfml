@@ -124,8 +124,8 @@ namespace gcn
                 break;
 
             case sf::Event::MouseMoved:
-                mouseInput.setX(event.mouseButton.x);
-                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setX(event.mouseMove.x);
+                mouseInput.setY(event.mouseMove.y);
                 mouseInput.setButton(MouseInput::Empty);
                 mouseInput.setType(MouseInput::Moved);
                 mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
