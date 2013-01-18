@@ -1,6 +1,7 @@
 #include "guichan/sfml/sfmlgraphics.hpp"
 
 #include "guichan/exception.hpp"
+#include "guichan/font.hpp"
 #include "guichan/image.hpp"
 #include "guichan/sfml/sfmlimage.hpp"
 
@@ -189,6 +190,29 @@ namespace gcn
         mTarget->draw(rect, 4, sf::Quads);
     }
 
+    void SFMLGraphics::drawText(const std::string& text,
+                                int x,
+                                int y,
+                                Alignment alignment)
+    {
+        if (mFont == NULL)
+        {
+            GCN_EXCEPTION("No font set in graphics.");
+        }
+
+        if (mClipStack.empty())
+        {
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
+        }
+
+        const ClipRectangle& top = mClipStack.top();
+
+        x += top.xOffset;
+        y += top.yOffset;
+
+        mFont->drawString(this, text, x, y);
+    }
+
     void SFMLGraphics::setColor(const Color& color)
     {
         mColor = color;
@@ -198,6 +222,11 @@ namespace gcn
     const Color& SFMLGraphics::getColor() const
     {
         return mColor;
+    }
+
+    void SFMLGraphics::setFont(Font* font)
+    {
+        mFont = font;
     }
 
     sf::View SFMLGraphics::convertClipRectangleToView(const ClipRectangle& rectangle) const
@@ -242,7 +271,7 @@ namespace gcn
     void SFMLGraphics::drawHorizontalLine(int x1, int y, int x2) {
         if (mClipStack.empty())
         {
-            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
         }
 
         const ClipRectangle& top = mClipStack.top();
@@ -301,7 +330,7 @@ namespace gcn
     void SFMLGraphics::drawVerticalLine(int x, int y1, int y2) {
         if (mClipStack.empty())
         {
-            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
         }
 
         const ClipRectangle& top = mClipStack.top();
@@ -360,7 +389,7 @@ namespace gcn
     void SFMLGraphics::drawBresenham(int x1, int y1, int x2, int y2) {
         if (mClipStack.empty())
         {
-            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
         }
 
         const ClipRectangle& top = mClipStack.top();

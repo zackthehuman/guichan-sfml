@@ -1,6 +1,7 @@
 #ifndef GCN_SFML_HPP
 #define GCN_SFML_HPP
 
+#include <guichan/sfml/sfmlfont.hpp>
 #include <guichan/sfml/sfmlgraphics.hpp>
 #include <guichan/sfml/sfmlimage.hpp>
 #include <guichan/sfml/sfmlimageloader.hpp>

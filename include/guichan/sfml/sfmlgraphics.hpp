@@ -76,9 +76,16 @@ namespace gcn
 
         virtual void fillRectangle(const Rectangle& rectangle);
 
+        virtual void drawText(const std::string& text,
+                              int x,
+                              int y,
+                              Alignment alignment = Left);
+
         virtual void setColor(const Color& color);
 
         virtual const Color& getColor() const;
+
+        virtual void setFont(Font* font);
 
     protected:
         /**
