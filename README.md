@@ -3,15 +3,16 @@ guichan-sfml
 
 A set of classes which provide an SFML-powered backend for [Guichan](http://gitorious.org/guichan). 
 
-## Supported Features ##
+## Implemented Features ##
 
-* Drawing images, lines, points, and rectangles
-* Clip rectangles and scaling depending on the RenderTarget's view
-* Input events (keyboard, mouse, mouse wheel, app focus)
+* `SFMLGraphics`: Drawing images, lines, points, and rectangles (outline or filled)
+** Clip rectangles and scaling depending on the RenderTarget's view
+* `SFMLImageLoader`: Load images via SFML's `loadFromFile`
+* `SFMLInput`: Input events (keyboard, mouse, mouse wheel, window focus)
 
-## Planned Features ##
+## Partially-implemented Features ##
 
-* Font rendering
+* Font rendering; alignment is currently not supported
 
 ## Example Usage ##
 
