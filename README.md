@@ -6,17 +6,18 @@ A set of classes which provide an SFML-powered backend for [Guichan](http://gito
 ## Implemented Features ##
 
 * `SFMLGraphics`: Drawing images, lines, points, and rectangles (outline or filled)
-** Clip rectangles and scaling depending on the RenderTarget's view
+  * Clip rectangles and scaling depending on the RenderTarget's view
 * `SFMLImageLoader`: Load images via SFML's `loadFromFile`
 * `SFMLInput`: Input events (keyboard, mouse, mouse wheel, window focus)
 
 ## Partially-implemented Features ##
 
-* Font rendering; alignment is currently not supported
+* `SFMLFont`: Alignment is currently not supported
 
 ## Example Usage ##
 
-The following example shows how to create an SFML window and integrate Guichan. A few widgets are also created, including one that draws an image and one that uses fonts.
+The following example shows how to create an SFML window and integrate Guichan.A few widgets are also created, including
+one that draws an image and one that uses fonts.
 
 ```c++
 #include <guichan/sfml.hpp>
