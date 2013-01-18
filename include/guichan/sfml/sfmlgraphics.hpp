@@ -86,6 +86,40 @@ namespace gcn
          */
         sf::View convertClipRectangleToView(const ClipRectangle& rectangle) const;
 
+        /**
+         * Emulates drawing a pixel at (x, y) by drawing a quad. This should only
+         * be called inside of another drawing method because it does not check
+         * the clip rectangle stack.
+         * @param x
+         * @param y
+         */
+        void _drawFauxPixel(int x, int y);
+
+        /**
+         * Draws a horizontal line from (x1, y) to (x2, y).
+         * @param x1 the starting x coordinate
+         * @param y
+         * @param x2 the terminating x coordinate
+         */
+        void drawHorizontalLine(int x1, int y, int x2);
+
+        /**
+         * Draws a vertical line from (x, y1) to (x, y2).
+         * @param y1 the starting y coordinate
+         * @param x
+         * @param y2 the terminating y coordinate
+         */
+        void drawVerticalLine(int x, int y1, int y2);
+
+        /**
+         * Draws a line from (x1, y1) to (x2, y2) using Bresenham's line algorithm.
+         * @param x1
+         * @param y1
+         * @param x2
+         * @param y2
+         */
+        void drawBresenham(int x1, int y1, int x2, int y2);
+
         sf::RenderTarget* mTarget;
         sf::View mContextView;
         sf::Vector2f mSize;

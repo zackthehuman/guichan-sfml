@@ -23,7 +23,7 @@ namespace gcn
 
     void SFMLGraphics::_beginDraw()
     {
-        // Save the view before drawing
+        // Save the view before drawing.
         mContextView = mTarget->getView();
         mSize = mContextView.getSize();
 
@@ -34,7 +34,7 @@ namespace gcn
     {
         popClipArea();
 
-        // Restore the view after drawing
+        // Restore the view after drawing.
         mTarget->setView(mContextView);
     }
 
@@ -121,64 +121,26 @@ namespace gcn
         x += top.xOffset;
         y += top.yOffset;
 
-        sf::Vertex point(sf::Vector2f(static_cast<float>(x), static_cast<float>(y)), mSfmlColor);
-
-        mTarget->draw(&point, 1, sf::Points);
+        _drawFauxPixel(x, y);
     }
 
     void SFMLGraphics::drawLine(int x1, int y1, int x2, int y2)
     {
-        if (mClipStack.empty())
+        if (y1 == y2)
         {
-            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
+            drawHorizontalLine(x1, y1, x2);
+            return;
         }
-
-        const ClipRectangle& top = mClipStack.top();
-
-        x1 += top.xOffset;
-        y1 += top.yOffset;
-        x2 += top.xOffset;
-        y2 += top.yOffset;
-
-        bool isHorizontal = (y2 - y1 == 0);
-        bool isVertical = (x2 - x1 == 0);
-
-        const float x1f = static_cast<float>(x1);
-        const float y1f = static_cast<float>(y1);
-        const float x2f = static_cast<float>(x2);
-        const float y2f = static_cast<float>(y2);
-
-        sf::Vertex line[6];
-
-        if (isHorizontal)
+        else if (x1 == x2)
         {
-            line[0] = sf::Vertex(sf::Vector2f(x1, y1 + 1.0f), mSfmlColor);
-            line[1] = sf::Vertex(sf::Vector2f(x1, y1), mSfmlColor);
-            line[2] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2), mSfmlColor);
-            line[3] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2), mSfmlColor);
-            line[4] = sf::Vertex(sf::Vector2f(x2 + 1.0f, y2 + 1.0f), mSfmlColor);
-            line[5] = sf::Vertex(sf::Vector2f(x1, y1 + 1.0f), mSfmlColor);
-        }
-        else if (isVertical)
-        {
-            line[0] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
-            line[1] = sf::Vertex(sf::Vector2f(x1f + 1.0f, y1f), mSfmlColor);
-            line[2] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f + 1.0f), mSfmlColor);
-            line[3] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f + 1.0f), mSfmlColor);
-            line[4] = sf::Vertex(sf::Vector2f(x2f, y2f + 1.0f), mSfmlColor);
-            line[5] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+            drawVerticalLine(x1, y1, y2);
+            return;
         }
         else
         {
-            line[0] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
-            line[1] = sf::Vertex(sf::Vector2f(x1f + 1.0f, y1f), mSfmlColor);
-            line[2] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f), mSfmlColor);
-            line[3] = sf::Vertex(sf::Vector2f(x2f + 1.0f, y2f), mSfmlColor);
-            line[4] = sf::Vertex(sf::Vector2f(x2f, y2f), mSfmlColor);
-            line[5] = sf::Vertex(sf::Vector2f(x1f, y1f), mSfmlColor);
+            drawBresenham(x1, y1, x2, y2);
+            return;
         }
-
-        mTarget->draw(line, 6, sf::Triangles);
     }
 
     void SFMLGraphics::drawRectangle(const Rectangle& rectangle)
@@ -190,15 +152,16 @@ namespace gcn
 
         const ClipRectangle& top = mClipStack.top();
 
-        const float x = static_cast<float>(rectangle.x + top.xOffset);
-        const float y = static_cast<float>(rectangle.y + top.yOffset);
-        const float w = static_cast<float>(rectangle.width);
-        const float h = static_cast<float>(rectangle.height);
+        int x1 = rectangle.x;
+        int x2 = rectangle.x + rectangle.width - 1;
+        int y1 = rectangle.y;
+        int y2 = rectangle.y + rectangle.height - 1;
 
-        drawLine(rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y); // Top
-        drawLine(rectangle.x + rectangle.width, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height); // Right
-        drawLine(rectangle.x + rectangle.width, rectangle.y + rectangle.height, rectangle.x, rectangle.y + rectangle.height); // Bottom
-        drawLine(rectangle.x, rectangle.y + rectangle.height, rectangle.x, rectangle.y); // Left
+        drawHorizontalLine(x1, y1, x2);
+        drawHorizontalLine(x1, y2, x2);
+
+        drawVerticalLine(x1, y1, y2);
+        drawVerticalLine(x2, y1, y2); // Fill in the "missing" pixel.
     }
 
     void SFMLGraphics::fillRectangle(const Rectangle& rectangle)
@@ -242,22 +205,275 @@ namespace gcn
         const sf::Vector2f& currentViewSize = mContextView.getSize();
 
         sf::FloatRect clipRectangle;
-        clipRectangle.top = static_cast<float>(rectangle.y);
-        clipRectangle.left = static_cast<float>(rectangle.x);
-        clipRectangle.width = static_cast<float>(rectangle.width);
+        clipRectangle.top    = static_cast<float>(rectangle.y);
+        clipRectangle.left   = static_cast<float>(rectangle.x);
+        clipRectangle.width  = static_cast<float>(rectangle.width);
         clipRectangle.height = static_cast<float>(rectangle.height);
 
-        // Use normalized viewport coordinates to emulate clipping
-        // Special case: if the viewport size is 0, then the width/height is 0
+        // Use normalized viewport coordinates to emulate clipping.
+        // Special case: if the viewport size is 0, then the width/height is 0.
         sf::FloatRect clipViewport;
-        clipViewport.top = currentViewSize.y == 0 ? 0 : (rectangle.y / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
-        clipViewport.left = currentViewSize.x == 0 ? 0 : (rectangle.x / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
-        clipViewport.width = currentViewSize.x == 0 ? 0 : (rectangle.width / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.top    = currentViewSize.y == 0 ? 0 : (rectangle.y / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.left   = currentViewSize.x == 0 ? 0 : (rectangle.x / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
+        clipViewport.width  = currentViewSize.x == 0 ? 0 : (rectangle.width / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
         clipViewport.height = currentViewSize.y == 0 ? 0 : (rectangle.height / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
 
         sf::View clippingView(clipRectangle);
         clippingView.setViewport(clipViewport);
 
         return clippingView;
+    }
+
+    void SFMLGraphics::_drawFauxPixel(int x, int y) {
+        float px = static_cast<float>(x);
+        float py = static_cast<float>(y);
+
+        sf::Vertex rect[4] = 
+        {
+            sf::Vertex(sf::Vector2f(px, py), mSfmlColor),
+            sf::Vertex(sf::Vector2f(px + 1, py), mSfmlColor),
+            sf::Vertex(sf::Vector2f(px + 1, py + 1), mSfmlColor),
+            sf::Vertex(sf::Vector2f(px, py + 1), mSfmlColor)
+        };
+
+        mTarget->draw(rect, 4, sf::Quads);
+    }
+
+    void SFMLGraphics::drawHorizontalLine(int x1, int y, int x2) {
+        if (mClipStack.empty())
+        {
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+        }
+
+        const ClipRectangle& top = mClipStack.top();
+
+        x1 += top.xOffset;
+        x2 += top.xOffset;
+        y += top.yOffset;
+
+        if (y < top.y || y >= top.y + top.height)
+        {
+            return;
+        }
+
+        if(x1 > x2) {
+            std::swap(x1, x2);
+        }
+
+        if (top.x > x1)
+        {
+            if (top.x > x2)
+            {
+                return;
+            }
+
+            x1 = top.x;
+        }
+
+        if (top.x + top.width <= x2)
+        {
+            if (top.x + top.width <= x1)
+            {
+                return;
+            }
+
+            x2 = top.x + top.width - 1;
+        }
+
+        // Overdraw by 1 pixel; Widgets expect this behavior
+        x2 += 1;
+
+        float lineX1 = static_cast<float>(x1);
+        float lineX2 = static_cast<float>(x2);
+        float lineY = static_cast<float>(y);
+
+        sf::Vertex rect[4] = 
+        {
+            sf::Vertex(sf::Vector2f(lineX1, lineY), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX2, lineY), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX2, lineY + 1), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX1, lineY + 1), mSfmlColor)
+        };
+
+        mTarget->draw(rect, 4, sf::Quads);
+    }
+
+    void SFMLGraphics::drawVerticalLine(int x, int y1, int y2) {
+        if (mClipStack.empty())
+        {
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+        }
+
+        const ClipRectangle& top = mClipStack.top();
+
+        x += top.xOffset;
+        y1 += top.yOffset;
+        y2 += top.yOffset;
+
+        if (x < top.x || x >= top.x + top.width)
+        {
+            return;
+        }
+
+        if(y1 > y2) {
+            std::swap(y1, y2);
+        }
+
+        if (top.y > y1)
+        {
+            if (top.y > y2)
+            {
+                return;
+            }
+
+            y1 = top.y;
+        }
+
+        if (top.y + top.height <= y2)
+        {
+            if (top.y + top.height <= y1)
+            {
+                return;
+            }
+
+            y2 = top.y + top.height - 1;
+        }
+
+        // Overdraw by 1 pixel; Widgets expect this behavior
+        y2 += 1;
+        
+        float lineX = static_cast<float>(x);
+        float lineY1 = static_cast<float>(y1);
+        float lineY2 = static_cast<float>(y2);
+
+        sf::Vertex rect[4] = 
+        {
+            sf::Vertex(sf::Vector2f(lineX, lineY1), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX, lineY2), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX + 1, lineY2), mSfmlColor),
+            sf::Vertex(sf::Vector2f(lineX + 1, lineY1), mSfmlColor)
+        };
+
+        mTarget->draw(rect, 4, sf::Quads);
+    }
+
+    void SFMLGraphics::drawBresenham(int x1, int y1, int x2, int y2) {
+        if (mClipStack.empty())
+        {
+            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw funtion outside of _beginDraw() and _endDraw()?");
+        }
+
+        const ClipRectangle& top = mClipStack.top();
+
+        x1 += top.xOffset;
+        x2 += top.xOffset;
+        y1 += top.yOffset;
+        y2 += top.yOffset;
+
+        int dx = std::abs(x2 - x1);
+        int dy = std::abs(y2 - y1);
+
+        if (dx > dy)
+        {
+            if (x1 > x2)
+            {
+                std::swap(x1, x2);
+                std::swap(y1, y2);
+            }
+
+            if (y1 < y2)
+            {
+                int y = y1;
+                int p = 0;
+
+                for (int x = x1; x <= x2; x++)
+                {
+                    if (top.isContaining(x, y))
+                    {
+                        _drawFauxPixel(x, y);
+                    }
+
+                    p += dy;
+
+                    if (p * 2 >= dx)
+                    {
+                        y++;
+                        p -= dx;
+                    }
+                }
+            }
+            else
+            {
+                int y = y1;
+                int p = 0;
+
+                for (int x = x1; x <= x2; x++)
+                {
+                    if (top.isContaining(x, y))
+                    {
+                        _drawFauxPixel(x, y);
+                    }
+
+                    p += dy;
+
+                    if (p * 2 >= dx)
+                    {
+                        y--;
+                        p -= dx;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (y1 > y2)
+            {
+                std::swap(y1, y2);
+                std::swap(x1, x2);
+            }
+
+            if (x1 < x2)
+            {
+                int x = x1;
+                int p = 0;
+
+                for (int y = y1; y <= y2; y++)
+                {
+                    if (top.isContaining(x, y))
+                    {
+                        _drawFauxPixel(x, y);
+                    }
+
+                    p += dx;
+
+                    if (p * 2 >= dy)
+                    {
+                        x++;
+                        p -= dy;
+                    }
+                }
+            }
+            else
+            {
+                int x = x1;
+                int p = 0;
+
+                for (int y = y1; y <= y2; y++)
+                {
+                    if (top.isContaining(x, y))
+                    {
+                        _drawFauxPixel(x, y);
+                    }
+
+                    p += dx;
+
+                    if (p * 2 >= dy)
+                    {
+                        x--;
+                        p -= dy;
+                    }
+                }
+            }
+        }
     }
 }
