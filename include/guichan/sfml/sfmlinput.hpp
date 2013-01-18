@@ -11,6 +11,11 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Clock.hpp>
 
+namespace sf
+{
+    class RenderTarget;
+}
+
 namespace gcn
 {
     class Key;
@@ -29,11 +34,12 @@ namespace gcn
 
         /**
          * Pushes an SFML event. It should be called at least once per frame to
-         * update input with user input.
+         * update input with user input. The RenderTarget should be provided in order
+         * to calculate coordinates of mouse events accurately.
          *
          * @param event an event from SFML.
          */
-        virtual void pushInput(sf::Event event);
+        virtual void pushInput(const sf::Event& event, const sf::RenderTarget& target);
 
         /**
          * Polls all input. It exists for input driver compatibility.
@@ -76,7 +82,7 @@ namespace gcn
         bool mMouseDown;
         bool mMouseInWindow;
 
-        sf::Clock clock;
+        sf::Clock mClock;
     };
 }
 

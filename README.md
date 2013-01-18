@@ -19,13 +19,13 @@ A set of classes which provide an SFML-powered backend for [Guichan](http://gito
 #include <guichan/sfml.hpp>
 #include <guichan/gui.hpp>
 #include <guichan/widgets/button.hpp>
+#include <guichan/widgets/checkbox.hpp>
 #include <guichan/widgets/container.hpp>
 #include <guichan/widgets/icon.hpp>
 
 #include <SFML/Graphics.hpp>
 
 #include <memory>
-#include <iostream>
 
 int main() {
     sf::VideoMode videoMode(640, 480, 32);
@@ -42,6 +42,7 @@ int main() {
     std::unique_ptr<gcn::Container> topContainer(new gcn::Container());
     std::unique_ptr<gcn::Icon> guiIcon(new gcn::Icon("sfml-small.png"));
     std::unique_ptr<gcn::Button> guiButton(new gcn::Button("Clicky!"));
+    std::unique_ptr<gcn::CheckBox> guiCheckbox(new gcn::CheckBox());
 
     gui->setInput(guiInput.get());
     gui->setGraphics(guiGraphics.get());
@@ -50,9 +51,15 @@ int main() {
     guiButton->setWidth(100);
     guiButton->setHeight(40);
 
+    guiCheckbox->setWidth(16);
+    guiCheckbox->setHeight(16);
+
     topContainer->setSize(400, 300);
     topContainer->add(guiIcon.get(), 50, 50);
     topContainer->add(guiButton.get(), 100, 100);
+    topContainer->add(guiCheckbox.get(), 210, 100);
+
+    bool useScaling = false;
 
     while (window->isOpen()) {
         sf::Event event;
@@ -61,10 +68,10 @@ int main() {
                 window->close();
             }
 
-            guiInput->pushInput(event);
+            guiInput->pushInput(event, *window);
         }
 
-        window->clear(sf::Color::Magenta);
+        window->clear();
 
         gui->logic();
         gui->draw();

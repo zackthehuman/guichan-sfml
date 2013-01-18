@@ -1,5 +1,7 @@
 #include "guichan/sfml/sfmlinput.hpp"
 
+#include <SFML/Graphics/RenderTarget.hpp>
+
 #include "guichan/exception.hpp"
 
 namespace gcn
@@ -50,7 +52,7 @@ namespace gcn
         return mouseInput;
     }
 
-    void SFMLInput::pushInput(sf::Event event)
+    void SFMLInput::pushInput(const sf::Event& event, const sf::RenderTarget& target)
     {
         KeyInput keyInput;
         MouseInput mouseInput;
@@ -102,41 +104,57 @@ namespace gcn
             }
 
             case sf::Event::MouseButtonPressed:
+            {
+                sf::Vector2i mouseCoords(event.mouseButton.x, event.mouseButton.y);
+                sf::Vector2f normalizedCoords = target.mapPixelToCoords(mouseCoords);
+
                 mMouseDown = true;
-                mouseInput.setX(event.mouseButton.x);
-                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setX(static_cast<int>(normalizedCoords.x));
+                mouseInput.setY(static_cast<int>(normalizedCoords.y));
                 mouseInput.setButton(convertMouseButton(event.mouseButton.button));
                 mouseInput.setType(MouseInput::Pressed);
-                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+                mouseInput.setTimeStamp(mClock.getElapsedTime().asMilliseconds());
 
                 mMouseInputQueue.push(mouseInput);
                 break;
-
+            }
             case sf::Event::MouseButtonReleased:
+            {
+                sf::Vector2i mouseCoords(event.mouseButton.x, event.mouseButton.y);
+                sf::Vector2f normalizedCoords = target.mapPixelToCoords(mouseCoords);
+
                 mMouseDown = false;
-                mouseInput.setX(event.mouseButton.x);
-                mouseInput.setY(event.mouseButton.y);
+                mouseInput.setX(static_cast<int>(normalizedCoords.x));
+                mouseInput.setY(static_cast<int>(normalizedCoords.y));
                 mouseInput.setButton(convertMouseButton(event.mouseButton.button));
                 mouseInput.setType(MouseInput::Released);
-                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+                mouseInput.setTimeStamp(mClock.getElapsedTime().asMilliseconds());
 
                 mMouseInputQueue.push(mouseInput);
                 break;
-
+            }
             case sf::Event::MouseMoved:
-                mouseInput.setX(event.mouseMove.x);
-                mouseInput.setY(event.mouseMove.y);
+            {
+                sf::Vector2i mouseCoords(event.mouseMove.x, event.mouseMove.y);
+                sf::Vector2f normalizedCoords = target.mapPixelToCoords(mouseCoords);
+
+                mouseInput.setX(static_cast<int>(normalizedCoords.x));
+                mouseInput.setY(static_cast<int>(normalizedCoords.y));
                 mouseInput.setButton(MouseInput::Empty);
                 mouseInput.setType(MouseInput::Moved);
-                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+                mouseInput.setTimeStamp(mClock.getElapsedTime().asMilliseconds());
 
                 mMouseInputQueue.push(mouseInput);
                 break;
-
+            }
             case sf::Event::MouseWheelMoved:
+            {
+                sf::Vector2i mouseCoords(event.mouseWheel.x, event.mouseWheel.y);
+                sf::Vector2f normalizedCoords = target.mapPixelToCoords(mouseCoords);
+
                 mMouseDown = true;
-                mouseInput.setX(event.mouseWheel.x);
-                mouseInput.setY(event.mouseWheel.y);
+                mouseInput.setX(static_cast<int>(normalizedCoords.x));
+                mouseInput.setY(static_cast<int>(normalizedCoords.y));
                 mouseInput.setButton(MouseInput::Empty);
 
                 if (event.mouseWheel.delta > 0)
@@ -148,11 +166,11 @@ namespace gcn
                     mouseInput.setType(MouseInput::WheelMovedDown);
                 }
 
-                mouseInput.setTimeStamp(clock.getElapsedTime().asMilliseconds());
+                mouseInput.setTimeStamp(mClock.getElapsedTime().asMilliseconds());
 
                 mMouseInputQueue.push(mouseInput);
                 break;
-
+            }
             case sf::Event::LostFocus:
                 /*
                  * This occurs when the mouse leaves the window and the Guichan
