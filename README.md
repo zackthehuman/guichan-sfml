@@ -15,6 +15,8 @@ A set of classes which provide an SFML-powered backend for [Guichan](http://gito
 
 ## Example Usage ##
 
+The following example shows how to create an SFML window and integrate Guichan. A few widgets are also created, including one that draws an image and one that uses fonts.
+
 ```c++
 #include <guichan/sfml.hpp>
 #include <guichan/gui.hpp>
