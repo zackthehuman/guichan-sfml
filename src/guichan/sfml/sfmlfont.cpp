@@ -1,6 +1,7 @@
 #include "guichan/sfml/sfmlfont.hpp"
 #include "guichan/sfml/sfmlgraphics.hpp"
 
+#include <limits>
 #include <string>
 
 #include <SFML/Graphics/RenderTarget.hpp>
@@ -18,9 +19,27 @@ namespace gcn
             throw GCN_EXCEPTION("Unable to load font from file \"" + filename + "\"");
         }
 
+        mColor = sf::Color::White;
+
         mText.setFont(mFont);
         mText.setCharacterSize(size);
         mText.setStyle(sf::Text::Regular);
+    }
+
+    const sf::Color& SFMLFont::getColor() const
+    {
+        return mColor;
+    }
+
+    void SFMLFont::setColor(const sf::Color& color)
+    {
+        mColor = color;
+        mText.setColor(mColor);
+    }
+
+    const sf::Font& SFMLFont::getFont() const
+    {
+        return mFont;
     }
 
     int SFMLFont::getHeight() const
@@ -33,7 +52,9 @@ namespace gcn
         sf::Text measureText;
         measureText.setString(text);
 
-        return static_cast<int>(measureText.getLocalBounds().width);
+        int width = static_cast<int>(measureText.findCharacterPos(std::numeric_limits<size_t>::max()).x);
+
+        return width;
     }
 
     void SFMLFont::drawString(Graphics* graphics, const std::string& text, int x, int y)

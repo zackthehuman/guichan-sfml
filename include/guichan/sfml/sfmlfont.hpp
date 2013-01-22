@@ -4,6 +4,7 @@
 #include "guichan/font.hpp"
 #include "guichan/platform.hpp"
 
+#include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
@@ -25,8 +26,11 @@ namespace gcn
          */
         virtual ~SFMLFont(){}
 
-        const sf::Font& getFont() const;
+        const sf::Color& getColor() const;
 
+        void setColor(const sf::Color& color);
+
+        const sf::Font& getFont() const;
 
         // Inherited from Font
 
@@ -39,6 +43,7 @@ namespace gcn
         virtual int getStringIndexAt(const std::string& text, int x) const;
 
     protected:
+        sf::Color mColor;
         sf::Font mFont;
         sf::Text mText;
     };

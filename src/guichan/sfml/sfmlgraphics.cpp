@@ -200,15 +200,18 @@ namespace gcn
             GCN_EXCEPTION("No font set in graphics.");
         }
 
-        if (mClipStack.empty())
+        if (alignment == Alignment::Center)
         {
-            throw GCN_EXCEPTION("Clip stack is empty, perhaps you called a draw function outside of _beginDraw() and _endDraw()?");
+            const int textWidth = mFont->getWidth(text);
+
+            x -= textWidth / 2;
         }
+        else if (alignment == Alignment::Right)
+        {
+            const int textWidth = mFont->getWidth(text);
 
-        const ClipRectangle& top = mClipStack.top();
-
-        x += top.xOffset;
-        y += top.yOffset;
+            x -= textWidth;
+        }
 
         mFont->drawString(this, text, x, y);
     }
