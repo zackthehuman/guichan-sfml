@@ -49,12 +49,10 @@ namespace gcn
 
     int SFMLFont::getWidth(const std::string& text) const
     {
-        sf::Text measureText;
-        measureText.setString(text);
+        sf::Text measureText(text, mFont, mText.getCharacterSize());
+        sf::Vector2f renderedDimensions = measureText.findCharacterPos(text.size());
 
-        int width = static_cast<int>(measureText.findCharacterPos(std::numeric_limits<size_t>::max()).x);
-
-        return width;
+        return static_cast<int>(renderedDimensions.x);
     }
 
     void SFMLFont::drawString(Graphics* graphics, const std::string& text, int x, int y)
@@ -65,6 +63,11 @@ namespace gcn
 	    {
             throw GCN_EXCEPTION("Graphics is not of type SFMLGraphics");
 	    }
+
+        const gcn::ClipRectangle& clip = graphics->getCurrentClipArea();
+
+        x += clip.xOffset;
+        y += clip.yOffset;
 
         mText.setString(text);
         mText.setPosition(static_cast<float>(x), static_cast<float>(y));
