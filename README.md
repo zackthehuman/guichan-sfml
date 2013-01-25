@@ -5,9 +5,9 @@ A set of classes which provide an SFML-powered backend for [Guichan](http://gito
 
 ## Implemented Features ##
 
-* `SFMLFont`: sf::Font rendering, gcn::Graphics::Alignment support works too
-* `SFMLGraphics`: Drawing images, lines, points, and rectangles (outline or filled)
-  * Clip rectangles and scaling depending on the RenderTarget's view
+* `SFMLFont`: `sf::Font` rendering, `gcn::Graphics::Alignment` supported
+* `SFMLGraphics`: Drawing images, lines, points, and rectangles (outline or filled), clip rectangles are emulated using `sf::View`s
+* `SFMLImage`: Wrapper for `sf::Texture` which also supports pixel reading/manipulation
 * `SFMLImageLoader`: Load images via SFML's `loadFromFile`
 * `SFMLInput`: Input events (keyboard, mouse, mouse wheel, window focus)
 
