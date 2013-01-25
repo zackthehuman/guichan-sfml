@@ -87,6 +87,16 @@ namespace gcn
 
         virtual void setFont(Font* font);
 
+        /**
+         * Converts an SFML color to a Guichan color.
+         */
+        static Color convertSFMLColorToGuichanColor(const sf::Color& color);
+
+        /**
+         * Converts a Guichan color to an SFML color.
+         */
+        static sf::Color convertGuichanColorToSFMLColor(const Color& color);
+
     protected:
         /**
          * Converts a ClipRectangle to an sf::View to be used for clipping by a RenderTarget.

@@ -13,6 +13,16 @@ namespace gcn
 {
     const float SFMLGraphics::PIXEL_ALIGNMENT_OFFSET = 0.375f;
 
+    Color SFMLGraphics::convertSFMLColorToGuichanColor(const sf::Color& color)
+    {
+        return Color(color.r, color.g, color.b, color.a);
+    }
+
+    sf::Color SFMLGraphics::convertGuichanColorToSFMLColor(const Color& color)
+    {
+        return sf::Color(color.r, color.g, color.b, color.a);
+    }
+
     SFMLGraphics::SFMLGraphics(sf::RenderTarget& target)
         : mTarget(&target)
     {
@@ -200,13 +210,13 @@ namespace gcn
             GCN_EXCEPTION("No font set in graphics.");
         }
 
-        if (alignment == Alignment::Center)
+        if (alignment == Graphics::Center)
         {
             const int textWidth = mFont->getWidth(text);
 
             x -= textWidth / 2;
         }
-        else if (alignment == Alignment::Right)
+        else if (alignment == Graphics::Right)
         {
             const int textWidth = mFont->getWidth(text);
 
@@ -219,7 +229,7 @@ namespace gcn
     void SFMLGraphics::setColor(const Color& color)
     {
         mColor = color;
-        mSfmlColor = sf::Color(mColor.r, mColor.g, mColor.b, mColor.a);
+        mSfmlColor = convertGuichanColorToSFMLColor(color);
     }
 
     const Color& SFMLGraphics::getColor() const

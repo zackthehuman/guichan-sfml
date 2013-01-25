@@ -5,6 +5,8 @@
 #include "guichan/platform.hpp"
 #include "guichan/image.hpp"
 
+#include <SFML/Graphics/Image.hpp>
+
 namespace sf {
     class Texture;
 }
@@ -53,7 +55,8 @@ namespace gcn
         virtual void convertToDisplayFormat();
 
     protected:
-        sf::Texture* mTexture;
+        sf::Texture* mTexture; // Used to store texture for graphics card
+        sf::Image mImage;     // Used to store texture pixels for manipulation
         bool mAutoFree;
     };
 }

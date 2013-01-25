@@ -1,4 +1,5 @@
 #include "guichan/sfml/sfmlimage.hpp"
+#include "guichan/sfml/sfmlgraphics.hpp"
 
 #include "guichan/exception.hpp"
 
@@ -11,6 +12,11 @@ namespace gcn
     {
         mAutoFree = autoFree;
         mTexture = texture;
+
+        if (mTexture != NULL)
+        {
+            mImage = mTexture->copyToImage();
+        }
     }
 
     SFMLImage::~SFMLImage()
@@ -53,13 +59,14 @@ namespace gcn
             throw GCN_EXCEPTION("Trying to get a pixel from a non loaded image.");
         }
 
-        // TODO: Implement getPixel
-        //       Potential way to implement is to convert to Image and then return
-        //       the pixel after converting its format.
+        if (x < 0 || x >= static_cast<int>(mImage.getSize().x) || y < 0 || y >= static_cast<int>(mImage.getSize().y))
+        {
+            throw GCN_EXCEPTION("Trying to get a pixel from a location outside image bounds.");
+        }
 
+        sf::Color sfmlColor = mImage.getPixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y));
 
-        // For now return none more black.
-        return Color();
+        return SFMLGraphics::convertSFMLColorToGuichanColor(sfmlColor);
     }
 
     void SFMLImage::putPixel(int x, int y, const Color& color)
@@ -69,9 +76,16 @@ namespace gcn
             throw GCN_EXCEPTION("Trying to put a pixel in a non loaded image.");
         }
 
-        // TODO: Imeplement setPixel
-        //       Potential way to implement is to convert to Image, update the pixel
-        //       and then update the Texture with the new pixel array.
+        if (x < 0 || x >= static_cast<int>(mImage.getSize().x) || y < 0 || y >= static_cast<int>(mImage.getSize().y))
+        {
+            throw GCN_EXCEPTION("Trying to set a pixel from a location outside image bounds.");
+        }
+
+        sf::Color sfmlColor = SFMLGraphics::convertGuichanColorToSFMLColor(color);
+
+        mImage.setPixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y), sfmlColor);
+        
+        mTexture->update(mImage);
     }
 
     void SFMLImage::convertToDisplayFormat()
