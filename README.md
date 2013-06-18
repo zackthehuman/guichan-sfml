@@ -13,7 +13,7 @@ A set of classes which provide an SFML-powered backend for [Guichan](http://gito
 
 ## Example Usage ##
 
-The following example shows how to create an SFML window and integrate Guichan. A few widgets are also created, including
+The following example shows how to create an SFML window and integrate Guichan. A few widgets are also created; including
 one that draws an image and one that uses fonts.
 
 ```c++
@@ -26,56 +26,55 @@ one that draws an image and one that uses fonts.
 
 #include <SFML/Graphics.hpp>
 
-#include <memory>
-
 int main() {
     sf::VideoMode videoMode(640, 480, 32);
-    std::unique_ptr<sf::RenderWindow> window(new sf::RenderWindow(videoMode, "Guichan SFML Test"));
-    std::unique_ptr<gcn::SFMLGraphics> guiGraphics(new gcn::SFMLGraphics(*window));
-    std::unique_ptr<gcn::SFMLFont> guiFont(new gcn::SFMLFont("arial.ttf", 10));
-    std::unique_ptr<gcn::SFMLInput> guiInput(new gcn::SFMLInput());
-    std::unique_ptr<gcn::SFMLImageLoader> guiImageLoader(new gcn::SFMLImageLoader());
+    sf::RenderWindow window(videoMode, "Guichan SFML Test");
 
-    gcn::Image::setImageLoader(guiImageLoader.get());
-    gcn::Widget::setGlobalFont(guiFont.get());
+    gcn::SFMLGraphics guiGraphics(window);
+    gcn::SFMLFont guiFont("arial.ttf", 10);
+    gcn::SFMLInput guiInput;
+    gcn::SFMLImageLoader guiImageLoader;
 
-    std::unique_ptr<gcn::Gui> gui(new gcn::Gui());
-    std::unique_ptr<gcn::Container> topContainer(new gcn::Container());
-    std::unique_ptr<gcn::Icon> guiIcon(new gcn::Icon("sfml-small.png"));
-    std::unique_ptr<gcn::Button> guiButton(new gcn::Button("Clicky!"));
-    std::unique_ptr<gcn::CheckBox> guiCheckbox(new gcn::CheckBox());
+    gcn::Image::setImageLoader(&guiImageLoader);
+    gcn::Widget::setGlobalFont(&guiFont);
 
-    gui->setInput(guiInput.get());
-    gui->setGraphics(guiGraphics.get());
-    gui->setTop(topContainer.get());
+    gcn::Gui gui;
+    gcn::Container topContainer;
+    gcn::Icon guiIcon("sfml-small.png");
+    gcn::Button guiButton("Clicky!");
+    gcn::CheckBox guiCheckbox;
 
-    guiButton->setWidth(100);
-    guiButton->setHeight(40);
+    gui.setInput(&guiInput);
+    gui.setGraphics(&guiGraphics);
+    gui.setTop(&topContainer);
 
-    guiCheckbox->setWidth(16);
-    guiCheckbox->setHeight(16);
+    guiButton.setWidth(100);
+    guiButton.setHeight(40);
 
-    topContainer->setSize(400, 300);
-    topContainer->add(guiIcon.get(), 50, 50);
-    topContainer->add(guiButton.get(), 100, 100);
-    topContainer->add(guiCheckbox.get(), 210, 100);
+    guiCheckbox.setWidth(16);
+    guiCheckbox.setHeight(16);
 
-    while (window->isOpen()) {
+    topContainer.setSize(400, 300);
+    topContainer.add(&guiIcon, 50, 50);
+    topContainer.add(&guiButton, 100, 100);
+    topContainer.add(&guiCheckbox, 210, 100);
+
+    while (window.isOpen()) {
         sf::Event event;
-        while (window->pollEvent(event)) {
+        while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
-                window->close();
+                window.close();
             }
 
-            guiInput->pushInput(event, *window);
+            guiInput.pushInput(event, window);
         }
 
-        window->clear();
+        window.clear();
 
-        gui->logic();
-        gui->draw();
+        gui.logic();
+        gui.draw();
 
-        window->display();
+        window.display();
     }
 
     return 0;
